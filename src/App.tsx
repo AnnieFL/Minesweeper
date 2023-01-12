@@ -1,17 +1,11 @@
-import { Board, BoardRow, BoardTile, Content, Footer, Navbar, NavbarIcon, Page, Tile } from "./styled";
+import { Board, BoardRow, BoardTile, Content, Navbar, NavbarBars, NavbarIcon, NavbarIconImage, Page, SideMenu, Tile } from "./styled";
 import React, { useEffect, useState } from "react";
 import { IMinePosition, IBoardTiles } from "./interfaces";
-import { type } from "os";
 
 export default function App() {
-  const verticalTiles = 20;
-  const horizontalTiles = 20;
-  const mineAmount = 100;
-  const [boardTiles, setBoardTiles] = useState<IBoardTiles[][]>([]);
-  const [minePos, setMinePos] = useState<IMinePosition[]>([]);
-  const [moveCount, setMoveCount] = useState<number>(0);
-  const [state, setState] = useState<"playing" | "win" | "lose">("playing");
-
+  const verticalTiles = 10;
+  const horizontalTiles = 10;
+  const mineAmount = 10;
   const tileColors = [
     { tile: "", color: "#FFFFFF", background: "#DDDDDD" },
     { tile: 1, color: "#0000FF", background: "#FFFFFF" },
@@ -25,10 +19,22 @@ export default function App() {
     { tile: "!", color: "#FF9900", background: "#FFFFFF" },
     { tile: "*", color: "#FF0000", background: "#FFFFFF" },
   ]
+  
+  const [boardTiles, setBoardTiles] = useState<IBoardTiles[][]>([]);
+  const [minePos, setMinePos] = useState<IMinePosition[]>([]);
+  const [moveCount, setMoveCount] = useState<number>(0);
+  const [state, setState] = useState<"playing" | "win" | "lose" | "reset">("playing");
 
   useEffect(() => {
-    loadTiles();
-  }, [])
+    if (state === "reset") {
+      setState("playing");
+    }
+    
+    if (state === "playing") {
+      setMinePos([]);
+      loadTiles();
+    }
+  }, [state])
 
   useEffect(() => {
     checkFirstTile();
@@ -179,12 +185,18 @@ export default function App() {
       return alert("Victory!");
     }
   }
-
   return (
     <Page>
       <Navbar>
-        <NavbarIcon></NavbarIcon>
-      </Navbar>
+        <NavbarBars>☰</NavbarBars>
+        <NavbarIcon onClick={() => setState("reset")}>
+          <NavbarIconImage src={'/smily_classic.png'} />
+        </NavbarIcon>
+      </Navbar>      
+
+      <SideMenu>
+
+      </SideMenu>
 
       <Content>
         <Board>
@@ -192,6 +204,7 @@ export default function App() {
             <BoardRow key={rowIndex}>
               {row.map((tile, tileIndex) => (
                 <BoardTile
+                  hide={tile.hidden}
                   onClick={() => state === "playing" && tile.flagged === false && tile.hidden === true ? revealTile(tileIndex, rowIndex) : {}}
                   onContextMenu={(event) => state === "playing" && tile.hidden === true ? flagTile(tileIndex, rowIndex, event) : {}}
                 >
@@ -202,16 +215,16 @@ export default function App() {
                           color={tileColors.find((til) => til.tile === "*")?.color}
                           background={tileColors.find((til) => til.tile === "*")?.background}
                         >
-                          {tileColors.find((til) => til.tile === "*")?.tile}
+                          {tile.flagged ? "O" : tileColors.find((til) => til.tile === "*")?.tile}
                         </Tile>
                       }
                       {!minePos.find((position: IMinePosition) => (position.x === tileIndex && position.y === rowIndex)) &&
-                        <Tile 
-                        color={tileColors.find((til) => til.tile === countMines(tileIndex, rowIndex))?.color}
-                        background={tileColors.find((til) => til.tile === countMines(tileIndex, rowIndex))?.background }
+                        <Tile
+                          color={tileColors.find((til) => til.tile === countMines(tileIndex, rowIndex))?.color}
+                          background={tileColors.find((til) => til.tile === countMines(tileIndex, rowIndex))?.background}
                         >
                           {tileColors.find((til) => til.tile === countMines(tileIndex, rowIndex))?.tile}
-                          </Tile>
+                        </Tile>
                       }
                     </React.Fragment>
                   }
@@ -220,7 +233,7 @@ export default function App() {
                       color={tileColors.find((til) => til.tile === "!")?.color}
                       background={tileColors.find((til) => til.tile === "!")?.background}
                     >
-                      {tileColors.find((til) => til.tile === "!")?.tile}
+                      {state === "lose" ? "X" : tileColors.find((til) => til.tile === "!")?.tile}
                     </Tile>
                   }
                 </BoardTile>
@@ -229,8 +242,6 @@ export default function App() {
           ))}
         </Board>
       </Content>
-
-      <Footer>Like it? pls hire me. am good programmer</Footer>
     </Page>
   );
 }

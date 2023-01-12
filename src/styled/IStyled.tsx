@@ -1,4 +1,6 @@
 export interface IStyled {
     color?: string,
-    background?: string
+    background?: string,
+    hide?: boolean,
+    left?: number
 }
